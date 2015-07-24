@@ -1,0 +1,418 @@
+/*The MIT License (MIT)
+
+Copyright (c) 2015 Goodpatch, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.*/
+
+var prott = {
+    "definations": {
+        "apiBase": "https://prottapp.com/",
+        "apiSignin": "users/sign_in.json",
+        "apiSignout": "users/sign_out.json",
+        "apiProjects": "api/sketch_app/projects.json",
+        "apiScreens": "api/sketch_app/screens.json",
+        "ratioItems": [
+            {"name": "0.5x", "value": "0.5"},
+            {"name": "1x", "value": "1"},
+            {"name": "1.5x", "value": "1.5"},
+            {"name": "2x", "value": "2"},
+            {"name": "3x", "value": "3"},
+            {"name": "4x", "value": "4"}
+        ]
+    },
+
+    "getUnarchivedObjectFromData": function(data){
+        return [NSKeyedUnarchiver unarchiveObjectWithData:data]
+    },
+
+    "setArchivedObjectForData": function(data){
+        return [NSKeyedArchiver archivedDataWithRootObject:data]
+    },
+
+    "getSavedValueFromKey": function(key){
+        return [[NSUserDefaults standardUserDefaults] objectForKey:key]
+    },
+
+    "saveValueForKey": function(value, key){
+        [[NSUserDefaults standardUserDefaults] setObject:value forKey:key]
+        [[NSUserDefaults standardUserDefaults] synchronize]
+    },
+
+    "getSavedCookie": function(){
+        var cookieSaved = prott.getSavedValueFromKey("cookie")
+        return prott.getUnarchivedObjectFromData(cookieSaved)
+    },
+
+    "getSavedprojects": function(){
+        var projectsSaved = prott.getSavedValueFromKey("projects")
+        return prott.getUnarchivedObjectFromData(projectsSaved)
+    },
+
+    "showMessage": function(message, context){
+        var doc = context.document
+        [doc showMessage:message]
+    },
+
+    "showAlert": function(message){
+        var alert = NSAlert.alloc().init()
+        alert.messageText = message
+        alert.addButtonWithTitle("OK")
+        alert.runModal()
+    },
+
+    "showLoginDialog": function(context){
+        var accessoryView = NSView.alloc().initWithFrame(NSMakeRect(0.0, 0.0, 260.0, 50.0))
+
+        var emailInputField = NSTextField.alloc().initWithFrame(NSMakeRect(0.0, 30.0, 260.0, 20.0))
+        emailInputField.cell().setPlaceholderString("Email")
+        accessoryView.addSubview(emailInputField)
+
+        var passwordInputField = NSSecureTextField.alloc().initWithFrame(NSMakeRect(0.0, 0.0, 260.0, 20.0))
+        passwordInputField.cell().setPlaceholderString("Password")
+        accessoryView.addSubview(passwordInputField)
+
+        var alert = NSAlert.alloc().init()
+        alert.messageText = "Login to Prott"
+        alert.addButtonWithTitle("Login")
+        alert.addButtonWithTitle("Cancel")
+        alert.setAccessoryView(accessoryView)
+
+        var plugin = context.plugin
+        var imageFilePath=[plugin urlForResourceNamed:"logo.png"]
+        var imageData = [NSData dataWithContentsOfURL:imageFilePath]
+        var image = NSImage.alloc().initWithData(imageData)
+        alert.setIcon(image)
+
+        var responseCode = alert.runModal()
+        return [responseCode, emailInputField.stringValue(), passwordInputField.stringValue()]
+    },
+
+    "showOptionDialog": function(context){
+        var optionWindow = NSWindow.alloc().init()
+        [optionWindow setTitle:"Prott sketch plugin options"]
+        [optionWindow setFrame:NSMakeRect(0, 0, 570, 290) display:true]
+
+        var accessoryView = NSView.alloc().initWithFrame(NSMakeRect(0.0, 0.0, 550.0, 210.0))
+
+        var plugin = context.plugin
+        var imageFilePath=[plugin urlForResourceNamed:"logo@2x.png"]
+        var imageData = [NSData dataWithContentsOfURL:imageFilePath]
+        var image = NSImage.alloc().initWithData(imageData)
+        var imageView = [[NSImageView alloc] initWithFrame:NSMakeRect(20.0, 125.0, 123.0, 114.0)]
+        [imageView setImage: image]
+        accessoryView.addSubview(imageView)
+
+        var syncOptionsBox = NSBox.alloc().initWithFrame(NSMakeRect(160.0, 46.0, 400.0, 220.0))
+        [syncOptionsBox setTitle:""]
+        accessoryView.addSubview(syncOptionsBox)
+
+        var projectsLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 160.0, 110.0, 26.0))
+        [projectsLabel setEditable:false]
+        [projectsLabel setBordered:false]
+        [projectsLabel setDrawsBackground:false]
+        [projectsLabel setFont:[NSFont systemFontOfSize:14]]
+        [projectsLabel setStringValue:"Project to sync:"]
+        [projectsLabel setAlignment:1]
+        syncOptionsBox.addSubview(projectsLabel)
+
+        var projectsListButton = NSPopUpButton.alloc().initWithFrame(NSMakeRect(134.0, 160.0, 240.0, 26.0))
+        [projectsListButton setNeedsDisplay:true]
+        var projects = prott.getSavedprojects()
+        var projectsList = []
+        var menu = NSMenu.alloc().init()
+
+        for(organzation in projects){
+            if (projects[organzation].projects.count() == 0) {
+                continue
+            }
+
+            var accountMenuItem = [[NSMenuItem alloc] initWithTitle:projects[organzation].name action:nil keyEquivalent:""]
+            [accountMenuItem setEnabled:false]
+            [menu addItem:accountMenuItem]
+            projectsList.push({name: projects[organzation].name, id: projects[organzation].id})
+
+            for(i = 0; i < projects[organzation].projects.count(); i++){
+                var projectMenuItem = [[NSMenuItem alloc] initWithTitle:projects[organzation].projects[i].name action:nil keyEquivalent:""]
+                [projectMenuItem setIndentationLevel:1]
+                [menu addItem:projectMenuItem]
+                projectsList.push({name: projects[organzation].projects[i].name, id: projects[organzation].projects[i].id})
+            }
+
+            projectsList.push({name: "separate", id: [NSUUID UUID]})
+            [menu addItem:[NSMenuItem separatorItem]]
+        }
+        [menu setAutoenablesItems:false]
+        [projectsListButton setMenu:menu]
+        [projectsListButton selectItemAtIndex:prott.getSavedValueFromKey("projectToSyncIndex")]
+        syncOptionsBox.addSubview(projectsListButton)
+
+        var refreshProjectsButton = NSButton.alloc().initWithFrame(NSMakeRect(130.0, 130.0, 180.0, 26.0))
+        [refreshProjectsButton setTitle:"Refresh projects list"]
+        [refreshProjectsButton setBezelStyle:NSRoundedBezelStyle]
+        [refreshProjectsButton setCOSJSTargetFunction:function(sender) {
+            prott.getProjectsFromServer()
+
+            projects = prott.getSavedprojects()
+            projectsList = []
+            var menu = NSMenu.alloc().init()
+            for(organzation in projects){
+                if (projects[organzation].projects.count() == 0) {
+                    continue
+                }
+
+                var accountMenuItem = [[NSMenuItem alloc] initWithTitle:projects[organzation].name action:nil keyEquivalent:""]
+                [accountMenuItem setEnabled:false]
+                [menu addItem:accountMenuItem]
+                projectsList.push({name: projects[organzation].name, id: projects[organzation].id})
+
+                for(i = 0; i < projects[organzation].projects.count(); i++){
+                    var projectMenuItem = [[NSMenuItem alloc] initWithTitle:"    "+projects[organzation].projects[i].name action:nil keyEquivalent:""]
+                    [menu addItem:projectMenuItem]
+                    projectsList.push({name: projects[organzation].projects[i].name, id: projects[organzation].projects[i].id})
+                }
+
+                projectsList.push({name: "separate", id: [NSUUID UUID]})
+                [menu addItem:[NSMenuItem separatorItem]]
+            }
+            [menu setAutoenablesItems:false]
+            [projectsListButton setMenu:menu]
+            [projectsListButton selectItemAtIndex:prott.getSavedValueFromKey("projectToSyncIndex")]
+        }]
+        syncOptionsBox.addSubview(refreshProjectsButton)
+
+        var ratioLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 100.0, 110.0, 26.0))
+        [ratioLabel setEditable:false]
+        [ratioLabel setBordered:false]
+        [ratioLabel setDrawsBackground:false]
+        [ratioLabel setFont:[NSFont systemFontOfSize:14]]
+        [ratioLabel setStringValue:"Image ratio:"]
+        [ratioLabel setAlignment:1]
+        syncOptionsBox.addSubview(ratioLabel)
+
+        var ratioList = NSPopUpButton.alloc().initWithFrame(NSMakeRect(136.0, 100.0, 80.0, 26.0))
+        for(var i in prott.definations.ratioItems){
+            var menuItem = [[NSMenuItem alloc] initWithTitle:prott.definations.ratioItems[i].name action:nil keyEquivalent:""]
+            [[ratioList menu] addItem:menuItem]
+        }
+        [ratioList selectItemAtIndex:prott.getSavedValueFromKey("ratioIndex")]
+        syncOptionsBox.addSubview(ratioList)
+
+        var syncOptionsLine = NSBox.alloc().initWithFrame(NSMakeRect(12.0, 85.0, 360.0, 4.0))
+        [syncOptionsLine setTitle:""]
+        syncOptionsBox.addSubview(syncOptionsLine)
+
+        var accountLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 40.0, 110.0, 26.0))
+        [accountLabel setEditable:false]
+        [accountLabel setBordered:false]
+        [accountLabel setDrawsBackground:false]
+        [accountLabel setFont:[NSFont systemFontOfSize:14]]
+        [accountLabel setStringValue:"Account:"]
+        [accountLabel setAlignment:1]
+        syncOptionsBox.addSubview(accountLabel)
+
+        var accountInfo = NSTextField.alloc().initWithFrame(NSMakeRect(136.0, 40.0, 240.0, 26.0))
+        [accountInfo setEditable:false]
+        [accountInfo setBordered:false]
+        [accountInfo setDrawsBackground:false]
+        [accountInfo setFont:[NSFont systemFontOfSize:14]]
+        [accountInfo setStringValue:prott.getSavedValueFromKey("accountInfo")]
+        [accountInfo setLineBreakMode:NSLineBreakByTruncatingTail]
+        syncOptionsBox.addSubview(accountInfo)
+
+        var logoutButton = NSButton.alloc().initWithFrame(NSMakeRect(130.0, 10.0, 110.0, 26.0))
+        [logoutButton setTitle:"Log out"]
+        [logoutButton setBezelStyle:NSRoundedBezelStyle]
+        [logoutButton setCOSJSTargetFunction:function(sender) {
+            [[NSApplication sharedApplication] stopModal]
+            [optionWindow orderOut:self]
+            prott.logoutFromSketch()
+            prott.initialSettings(context)
+        }]
+        syncOptionsBox.addSubview(logoutButton)
+
+        var closeButton = NSButton.alloc().initWithFrame(NSMakeRect(450.0, 10.0, 110.0, 26.0))
+        [closeButton setTitle:"Close"]
+        [closeButton setBezelStyle:NSRoundedBezelStyle]
+        [closeButton setCOSJSTargetFunction:function(sender) {
+            [[NSApplication sharedApplication] stopModal]
+            [optionWindow orderOut:self]
+        }]
+        accessoryView.addSubview(closeButton)
+
+        if(projects.count() == 0){
+            prott.showAlert("It seems you don't have any projects. Go to https://prottapp.com and create one, then click the 'Refresh projects list' button from the options.")
+        }
+        [optionWindow setContentView:accessoryView]
+        [[NSApplication sharedApplication] runModalForWindow:optionWindow]
+
+        prott.saveValueForKey(projectsList[[projectsListButton indexOfSelectedItem]].id, "projectToSync")
+        prott.saveValueForKey([projectsListButton indexOfSelectedItem], "projectToSyncIndex")
+        prott.saveValueForKey(prott.definations.ratioItems[[ratioList indexOfSelectedItem]].value, "ratio")
+        prott.saveValueForKey([ratioList indexOfSelectedItem], "ratioIndex")
+    },
+
+    "initialSettings": function(context){
+        var response = prott.showLoginDialog(context)
+        if(response[0] == 1000){
+            var response = prott.loginWithEmailAndPassword(response[1], response[2])
+            if(response == 1){
+                prott.showOptionDialog(context)
+            }else{
+                prott.showAlert("Oops! Something went wrong. Please check your login details and try again.")
+            }
+        }
+    },
+
+    "loginWithEmailAndPassword": function(email, password){
+        var url = [NSURL URLWithString:prott.definations.apiBase+prott.definations.apiSignin]
+        var request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:60]
+        [request setHTTPMethod:"POST"]
+        [request setValue:"sketch" forHTTPHeaderField:"User-Agent"]
+        [request setValue:"application/json" forHTTPHeaderField:"Content-Type"]
+        [request setValue:"sketch" forHTTPHeaderField:"App-Type"]
+
+        var subParameter = NSDictionary.alloc().initWithObjectsAndKeys(email, @"email", password, @"password", nil)
+        var parameter = NSDictionary.alloc().initWithObjectsAndKeys(subParameter, @"user", nil)
+        var postData = [NSJSONSerialization dataWithJSONObject:parameter options:0 error:nil]
+        [request setHTTPBody:postData]
+
+        var response = MOPointer.alloc().init()
+        var error = MOPointer.alloc().init()
+        var data = [NSURLConnection sendSynchronousRequest:request returningResponse:response error:error]
+
+        if (error.value() == nil && data != nil){
+            var res = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves error:nil]
+            var cookie = [NSHTTPCookie cookiesWithResponseHeaderFields:response.value().valueForKey(@"allHeaderFields") forURL:[NSURL URLWithString:"/"]]
+            var cookieForSave = prott.setArchivedObjectForData(cookie)
+            prott.saveValueForKey(cookieForSave, "cookie")
+            prott.saveValueForKey(res.uid+" ("+res.email+")", "accountInfo")
+            prott.getProjectsFromServer()
+            return true
+        }else{
+            return error.value()
+        }
+    },
+
+    "logoutFromSketch": function(){
+        prott.saveValueForKey(nil, "cookie")
+        prott.saveValueForKey(nil, "accountInfo")
+        prott.saveValueForKey(nil, "projects")
+
+        var url = [NSURL URLWithString:prott.definations.apiBase+prott.definations.apiSignout]
+        var request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:60]
+        [request setHTTPMethod:"DELETE"]
+        [request setValue:"Sketch" forHTTPHeaderField:"User-Agent"]
+        [request setValue:"application/json" forHTTPHeaderField:"Content-Type"]
+        [request setValue:"sketch" forHTTPHeaderField:"App-Type"]
+
+        var response = MOPointer.alloc().init()
+        var error = MOPointer.alloc().init()
+        var data = [NSURLConnection sendSynchronousRequest:request returningResponse:response error:error]
+    },
+
+    "getProjectsFromServer": function(){
+        var url = [NSURL URLWithString:prott.definations.apiBase+prott.definations.apiProjects]
+
+        var request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:60]
+        [request setHTTPMethod:"GET"]
+        [request setValue:"sketch" forHTTPHeaderField:"User-Agent"]
+        [request setValue:"application/json" forHTTPHeaderField:"Content-Type"]
+        [request setValue:"sketch" forHTTPHeaderField:"App-Type"]
+
+        var cookie = prott.getSavedCookie()
+        var header = [NSHTTPCookie requestHeaderFieldsWithCookies:cookie]
+        [request setAllHTTPHeaderFields:header]
+
+        var parameter = NSDictionary.alloc().initWithObjectsAndKeys('true', @"active", nil)
+        var postData = [NSJSONSerialization dataWithJSONObject:parameter options:0 error:nil]
+        [request setHTTPBody:postData]
+
+        var response = MOPointer.alloc().init()
+        var error = MOPointer.alloc().init()
+        var data = [NSURLConnection sendSynchronousRequest:request returningResponse:response error:error]
+
+        if (error.value() == nil && data != nil){
+            var res = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves error:nil]
+            var projectsForSave = prott.setArchivedObjectForData(res)
+            prott.saveValueForKey(projectsForSave, "projects")
+            return res
+        }else{
+            var res = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves error:nil]
+            return error.value()
+        }
+    },
+
+    "syncSelectedArtboards": function(context){
+        var doc = context.document
+        var selections = context.selection
+        var loop = [selections objectEnumerator]
+        var cookie = [NSHTTPCookie requestHeaderFieldsWithCookies:prott.getSavedCookie()]
+        var count = 0
+        while (item = [loop nextObject]) {
+            if (item.className() == "MSArtboardGroup") {
+                prott.uploadArtboard(doc, item, cookie.Cookie)
+                count++
+            }
+        }
+        if (count == 0) {
+            prott.showAlert("You must select at least one artboard to sync.")
+        }else{
+            prott.showMessage("All selected artboards synced to Prott.", context)
+        }
+    },
+
+    "syncAllArtboards": function(context){
+        var doc = context.document
+        var artboards = [[doc currentPage] artboards]
+        var loop = [artboards objectEnumerator]
+        var cookie = [NSHTTPCookie requestHeaderFieldsWithCookies:prott.getSavedCookie()]
+        while (artboard = [loop nextObject]) {
+            prott.uploadArtboard(doc, artboard, cookie.Cookie)
+        }
+        prott.showMessage("All artboards synced to Prott.", context)
+    },
+
+    "uploadArtboard": function(document, artboard, cookie){
+        var copy = [artboard duplicate]
+        var frame = [copy frame]
+        var rect = [MSSliceTrimming trimmedRectForSlice:copy],
+        slice = [MSExportRequest requestWithRect:rect scale:prott.getSavedValueFromKey("ratio")]
+        [copy removeFromParent]
+        var filePath = NSTemporaryDirectory() + "prott/" + artboard.objectID() + ".png"
+        [document saveArtboardOrSlice:slice toFile: filePath]
+
+        var task = NSTask.alloc().init()
+        task.setLaunchPath("/usr/bin/curl")
+        var args = NSArray.arrayWithObjects("-X", "POST", "-H", "Content-Type: multipart/form-data", "-H", "App-Type: sketch", "-H", "X-Accept: application/json", "-b", cookie, "-F", "project_id=" + prott.getSavedValueFromKey("projectToSync"), "-F", "screen[sketch_artboard_id]=" + artboard.objectID(), "-F", "screen[name]=" + artboard.name(), "-F", "Content-Disposition: form-data; name=file; filename=filename; Content-Type=image/png;", "-F", "screen[file]=@" + filePath, prott.definations.apiBase+prott.definations.apiScreens, nil)
+        task.setArguments(args)
+        var outputPipe = [NSPipe pipe]
+        [task setStandardOutput:outputPipe]
+        task.launch()
+
+        var outputData = [[outputPipe fileHandleForReading] readDataToEndOfFile]
+        var outputString = [[[NSString alloc] initWithData:outputData encoding:NSUTF8StringEncoding]]
+        if(outputString != "successed"){
+            if(outputString == " "){
+                prott.showAlert("Oops! Something went wrong. Please check if the project you tried to sync exists or if you have editing permission for the project.")
+            }else{
+                prott.showAlert(outputString[0])
+            }
+        }
+    }
+};

@@ -1,2 +1,5 @@
 # prott-sketch-plugin
-Sync Sketch artboard to Prott never been so easy.
+
+Sync Sketch artboards to Prott like a boss.
+
+[Details here.](https://blog.prottapp.com/post/en/sketch-integration)

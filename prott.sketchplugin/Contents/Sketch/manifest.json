@@ -1,0 +1,48 @@
+{
+  "name": "Prott Sketch plugin",
+  "description": "Sync Sketch artboards to Prott like a boss.",
+  "author": "Goodpatch, Inc.",
+  "homepage": "https://prottapp.com/",
+  "version": 1.0,
+  "identifier": "com.goodpatch.prott.prott-sketch-plugin",
+  "updateURL": "",
+  "compatibleVersion": 3,
+  "bundleVersion": 1,
+  "commands": [
+    {
+      "name": "Login to Prott",
+      "identifier": "login",
+      "shortcut": "",
+      "script": "login.cocoascript"
+    },
+    {
+      "name": "Sync All Artboards to Prott",
+      "identifier": "sync-all-artboards",
+      "shortcut": "cmd shift option u",
+      "handler": "onRun",
+      "script": "sync-all-artboards.cocoascript"
+    },
+    {
+      "name": "Sync Selected Artboards to Prott",
+      "identifier": "sync-selected-artboards",
+      "shortcut": "cmd shift u",
+      "handler": "onRun",
+      "script": "sync-selected-artboards.cocoascript"
+    },
+    {
+      "name": "Options",
+      "identifier": "options",
+      "shortcut": "",
+      "script": "login.cocoascript"
+    }
+  ],
+  "menu": {
+    "title": "Sync Artboards to Prott...",
+    "items": [
+      "login",
+      "sync-all-artboards",
+      "sync-selected-artboards",
+      "options"
+    ]
+  }
+}
