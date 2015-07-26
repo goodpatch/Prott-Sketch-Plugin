@@ -159,7 +159,11 @@ var prott = {
         }
         [menu setAutoenablesItems:false]
         [projectsListButton setMenu:menu]
-        [projectsListButton selectItemAtIndex:prott.getSavedValueFromKey("projectToSyncIndex")]
+        if(prott.getSavedValueFromKey("projectToSyncIndex")){
+            [projectsListButton selectItemAtIndex:prott.getSavedValueFromKey("projectToSyncIndex")]
+        }else{
+            [projectsListButton selectItemAtIndex:1]
+        }
         syncOptionsBox.addSubview(projectsListButton)
 
         var refreshProjectsButton = NSButton.alloc().initWithFrame(NSMakeRect(130.0, 130.0, 180.0, 26.0))
@@ -179,7 +183,7 @@ var prott = {
                 var accountMenuItem = [[NSMenuItem alloc] initWithTitle:projects[organzation].name action:nil keyEquivalent:""]
                 [accountMenuItem setEnabled:false]
                 [menu addItem:accountMenuItem]
-                projectsList.push({name: projects[organzation].name, id: projects[organzation].id})
+                projectsList.push({name: projects[organzation].name, id: nil})
 
                 for(i = 0; i < projects[organzation].projects.count(); i++){
                     var projectMenuItem = [[NSMenuItem alloc] initWithTitle:"    "+projects[organzation].projects[i].name action:nil keyEquivalent:""]
@@ -187,12 +191,16 @@ var prott = {
                     projectsList.push({name: projects[organzation].projects[i].name, id: projects[organzation].projects[i].id})
                 }
 
-                projectsList.push({name: "separate", id: [NSUUID UUID]})
+                projectsList.push({name: "separate", id: nil})
                 [menu addItem:[NSMenuItem separatorItem]]
             }
             [menu setAutoenablesItems:false]
             [projectsListButton setMenu:menu]
-            [projectsListButton selectItemAtIndex:prott.getSavedValueFromKey("projectToSyncIndex")]
+            if(prott.getSavedValueFromKey("projectToSyncIndex")){
+                [projectsListButton selectItemAtIndex:prott.getSavedValueFromKey("projectToSyncIndex")]
+            }else{
+                [projectsListButton selectItemAtIndex:1]
+            }
         }]
         syncOptionsBox.addSubview(refreshProjectsButton)
 
@@ -261,8 +269,13 @@ var prott = {
         [optionWindow setContentView:accessoryView]
         [[NSApplication sharedApplication] runModalForWindow:optionWindow]
 
-        prott.saveValueForKey(projectsList[[projectsListButton indexOfSelectedItem]].id, "projectToSync")
-        prott.saveValueForKey([projectsListButton indexOfSelectedItem], "projectToSyncIndex")
+        if(projectsList[[projectsListButton indexOfSelectedItem]].id){
+            prott.saveValueForKey(projectsList[[projectsListButton indexOfSelectedItem]].id, "projectToSync")
+            prott.saveValueForKey([projectsListButton indexOfSelectedItem], "projectToSyncIndex")
+        }else{
+            prott.saveValueForKey(projectsList[1].id, "projectToSync")
+            prott.saveValueForKey(1, "projectToSyncIndex")
+        }
         prott.saveValueForKey(prott.definations.ratioItems[[ratioList indexOfSelectedItem]].value, "ratio")
         prott.saveValueForKey([ratioList indexOfSelectedItem], "ratioIndex")
     },
@@ -313,6 +326,7 @@ var prott = {
         prott.saveValueForKey(nil, "cookie")
         prott.saveValueForKey(nil, "accountInfo")
         prott.saveValueForKey(nil, "projects")
+        prott.saveValueForKey(nil, "projectToSyncIndex")
 
         var url = [NSURL URLWithString:prott.definations.apiBase+prott.definations.apiSignout]
         var request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:60]
