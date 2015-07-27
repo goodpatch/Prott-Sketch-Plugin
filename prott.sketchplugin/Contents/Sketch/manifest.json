@@ -37,7 +37,7 @@
     }
   ],
   "menu": {
-    "title": "Sync Artboards to Prott...",
+    "title": "Prott Sketch Plugin",
     "items": [
       "login",
       "sync-all-artboards",
