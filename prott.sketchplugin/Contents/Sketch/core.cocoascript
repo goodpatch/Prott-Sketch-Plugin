@@ -22,6 +22,7 @@ SOFTWARE.*/
 
 var prott = {
     "definations": {
+        "pluginVersion": "Version 1.0.6",
         "apiBase": "https://prottapp.com/",
         "apiSignin": "users/sign_in.json",
         "apiSignout": "users/sign_out.json",
@@ -180,9 +181,16 @@ var prott = {
             projects = prott.getSavedprojects()
             projectsList = []
             var menu = NSMenu.alloc().init()
+            separateFlg = false
             for(organzation in projects){
                 if (projects[organzation].projects.count() == 0) {
                     continue
+                }
+                if (separateFlg) {
+                    projectsList.push({name: "separate", id: nil})
+                    [menu addItem:[NSMenuItem separatorItem]]
+                }else{
+                    separateFlg = true
                 }
 
                 var accountMenuItem = [[NSMenuItem alloc] initWithTitle:projects[organzation].name action:nil keyEquivalent:""]
@@ -195,9 +203,6 @@ var prott = {
                     [menu addItem:projectMenuItem]
                     projectsList.push({name: projects[organzation].projects[i].name, id: projects[organzation].projects[i].id})
                 }
-
-                projectsList.push({name: "separate", id: nil})
-                [menu addItem:[NSMenuItem separatorItem]]
             }
             [menu setAutoenablesItems:false]
             [projectsListButton setMenu:menu]
@@ -222,7 +227,11 @@ var prott = {
             var menuItem = [[NSMenuItem alloc] initWithTitle:prott.definations.ratioItems[i].name action:nil keyEquivalent:""]
             [[ratioList menu] addItem:menuItem]
         }
-        [ratioList selectItemAtIndex:prott.getSavedValueFromKey("ratioIndex")]
+        if(prott.getSavedValueFromKey("ratioIndex")){
+            [ratioList selectItemAtIndex:prott.getSavedValueFromKey("ratioIndex")]
+        }else{
+            [ratioList selectItemAtIndex:1]
+        }
         syncOptionsBox.addSubview(ratioList)
 
         var syncOptionsLine = NSBox.alloc().initWithFrame(NSMakeRect(12.0, 85.0, 360.0, 4.0))
@@ -259,6 +268,17 @@ var prott = {
             prott.initialSettings(context)
         }]
         syncOptionsBox.addSubview(logoutButton)
+
+        var versionLabel = NSTextField.alloc().initWithFrame(NSMakeRect(40.0, 8.0, 200.0, 26.0))
+        [versionLabel setEditable:false]
+        [versionLabel setBordered:false]
+        if (NSAppKitVersionNumber >= 1343) {
+            [versionLabel setTextColor:[NSColor grayColor]]
+        }
+        [versionLabel setDrawsBackground:false]
+        [versionLabel setStringValue:prott.definations.pluginVersion]
+        [versionLabel setAlignment:1]
+        accessoryView.addSubview(versionLabel)
 
         var closeButton = NSButton.alloc().initWithFrame(NSMakeRect(450.0, 10.0, 110.0, 26.0))
         [closeButton setTitle:"Close"]
