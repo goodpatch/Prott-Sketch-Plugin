@@ -71,7 +71,8 @@ var prott = {
 
     "showAlert": function(message){
         var alert = NSAlert.alloc().init()
-        alert.messageText = message
+
+        alert.setMessageText(message)
         alert.addButtonWithTitle("OK")
         alert.runModal()
     },
@@ -88,10 +89,10 @@ var prott = {
         accessoryView.addSubview(passwordInputField)
 
         var alert = NSAlert.alloc().init()
-        alert.messageText = "Login to Prott"
         alert.addButtonWithTitle("Login")
         alert.addButtonWithTitle("Cancel")
         alert.setAccessoryView(accessoryView)
+        alert.setMessageText("Login to Prott")
 
         var plugin = context.plugin
         var imageFilePath=[plugin urlForResourceNamed:"logo.png"]
@@ -122,11 +123,10 @@ var prott = {
         [syncOptionsBox setTitle:""]
         accessoryView.addSubview(syncOptionsBox)
 
-        var projectsLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 160.0, 110.0, 26.0))
+        var projectsLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 158.0, 110.0, 26.0))
         [projectsLabel setEditable:false]
         [projectsLabel setBordered:false]
         [projectsLabel setDrawsBackground:false]
-        [projectsLabel setFont:[NSFont systemFontOfSize:14]]
         [projectsLabel setStringValue:"Project to sync:"]
         [projectsLabel setAlignment:1]
         syncOptionsBox.addSubview(projectsLabel)
@@ -136,16 +136,23 @@ var prott = {
         var projects = prott.getSavedprojects()
         var projectsList = []
         var menu = NSMenu.alloc().init()
+        var separateFlg = false
 
         for(organzation in projects){
             if (projects[organzation].projects.count() == 0) {
                 continue
             }
+            if (separateFlg) {
+                projectsList.push({name: "separate", id: nil})
+                [menu addItem:[NSMenuItem separatorItem]]
+            }else{
+                separateFlg = true
+            }
 
             var accountMenuItem = [[NSMenuItem alloc] initWithTitle:projects[organzation].name action:nil keyEquivalent:""]
             [accountMenuItem setEnabled:false]
             [menu addItem:accountMenuItem]
-            projectsList.push({name: projects[organzation].name, id: projects[organzation].id})
+            projectsList.push({name: projects[organzation].name, id: nil})
 
             for(i = 0; i < projects[organzation].projects.count(); i++){
                 var projectMenuItem = [[NSMenuItem alloc] initWithTitle:projects[organzation].projects[i].name action:nil keyEquivalent:""]
@@ -153,10 +160,8 @@ var prott = {
                 [menu addItem:projectMenuItem]
                 projectsList.push({name: projects[organzation].projects[i].name, id: projects[organzation].projects[i].id})
             }
-
-            projectsList.push({name: "separate", id: [NSUUID UUID]})
-            [menu addItem:[NSMenuItem separatorItem]]
         }
+        
         [menu setAutoenablesItems:false]
         [projectsListButton setMenu:menu]
         if(prott.getSavedValueFromKey("projectToSyncIndex")){
@@ -204,16 +209,15 @@ var prott = {
         }]
         syncOptionsBox.addSubview(refreshProjectsButton)
 
-        var ratioLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 100.0, 110.0, 26.0))
+        var ratioLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 98.0, 110.0, 26.0))
         [ratioLabel setEditable:false]
         [ratioLabel setBordered:false]
         [ratioLabel setDrawsBackground:false]
-        [ratioLabel setFont:[NSFont systemFontOfSize:14]]
         [ratioLabel setStringValue:"Image ratio:"]
         [ratioLabel setAlignment:1]
         syncOptionsBox.addSubview(ratioLabel)
 
-        var ratioList = NSPopUpButton.alloc().initWithFrame(NSMakeRect(136.0, 100.0, 80.0, 26.0))
+        var ratioList = NSPopUpButton.alloc().initWithFrame(NSMakeRect(134.0, 100.0, 80.0, 26.0))
         for(var i in prott.definations.ratioItems){
             var menuItem = [[NSMenuItem alloc] initWithTitle:prott.definations.ratioItems[i].name action:nil keyEquivalent:""]
             [[ratioList menu] addItem:menuItem]
@@ -229,7 +233,6 @@ var prott = {
         [accountLabel setEditable:false]
         [accountLabel setBordered:false]
         [accountLabel setDrawsBackground:false]
-        [accountLabel setFont:[NSFont systemFontOfSize:14]]
         [accountLabel setStringValue:"Account:"]
         [accountLabel setAlignment:1]
         syncOptionsBox.addSubview(accountLabel)
@@ -238,9 +241,12 @@ var prott = {
         [accountInfo setEditable:false]
         [accountInfo setBordered:false]
         [accountInfo setDrawsBackground:false]
-        [accountInfo setFont:[NSFont systemFontOfSize:14]]
+        
+        // NSAppKitVersionNumber10_10 = 1343
+        if (NSAppKitVersionNumber >= 1343) {
+            [accountInfo setLineBreakMode:NSLineBreakByTruncatingTail]
+        }
         [accountInfo setStringValue:prott.getSavedValueFromKey("accountInfo")]
-        [accountInfo setLineBreakMode:NSLineBreakByTruncatingTail]
         syncOptionsBox.addSubview(accountInfo)
 
         var logoutButton = NSButton.alloc().initWithFrame(NSMakeRect(130.0, 10.0, 110.0, 26.0))
@@ -263,7 +269,7 @@ var prott = {
         }]
         accessoryView.addSubview(closeButton)
 
-        if(projects.count() == 0){
+        if(projects == nil || projects.count() == 0){
             prott.showAlert("It seems you don't have any projects. Go to https://prottapp.com and create one, then click the 'Refresh projects list' button from the options.")
         }
         [optionWindow setContentView:accessoryView]
@@ -313,8 +319,15 @@ var prott = {
             var res = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves error:nil]
             var cookie = [NSHTTPCookie cookiesWithResponseHeaderFields:response.value().valueForKey(@"allHeaderFields") forURL:[NSURL URLWithString:"/"]]
             var cookieForSave = prott.setArchivedObjectForData(cookie)
+            var accountInfoValue = ""
             prott.saveValueForKey(cookieForSave, "cookie")
-            prott.saveValueForKey(res.uid+" ("+res.email+")", "accountInfo")
+
+            if (NSAppKitVersionNumber >= 1343) {
+                accountInfoValue = res.uid+" ("+res.email+")"
+            }else{
+                accountInfoValue = res.email
+            }
+            prott.saveValueForKey(accountInfoValue, "accountInfo")
             prott.getProjectsFromServer()
             return true
         }else{
@@ -353,14 +366,9 @@ var prott = {
         var header = [NSHTTPCookie requestHeaderFieldsWithCookies:cookie]
         [request setAllHTTPHeaderFields:header]
 
-        var parameter = NSDictionary.alloc().initWithObjectsAndKeys('true', @"active", nil)
-        var postData = [NSJSONSerialization dataWithJSONObject:parameter options:0 error:nil]
-        [request setHTTPBody:postData]
-
         var response = MOPointer.alloc().init()
         var error = MOPointer.alloc().init()
         var data = [NSURLConnection sendSynchronousRequest:request returningResponse:response error:error]
-
         if (error.value() == nil && data != nil){
             var res = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves error:nil]
             var projectsForSave = prott.setArchivedObjectForData(res)
