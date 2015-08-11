@@ -22,7 +22,7 @@ SOFTWARE.*/
 
 var prott = {
     "definations": {
-        "pluginVersion": "Version 1.0.6",
+        "pluginVersion": "Version 1.0.8",
         "apiBase": "https://prottapp.com/",
         "apiSignin": "users/sign_in.json",
         "apiSignout": "users/sign_out.json",
@@ -70,9 +70,13 @@ var prott = {
         [doc showMessage:message]
     },
 
-    "showAlert": function(message){
+    "showAlert": function(message, context){
         var alert = NSAlert.alloc().init()
-
+        var plugin = context.plugin
+        var imageFilePath=[plugin urlForResourceNamed:"logo.png"]
+        var imageData = [NSData dataWithContentsOfURL:imageFilePath]
+        var image = NSImage.alloc().initWithData(imageData)
+        alert.setIcon(image)
         alert.setMessageText(message)
         alert.addButtonWithTitle("OK")
         alert.runModal()
@@ -290,7 +294,7 @@ var prott = {
         accessoryView.addSubview(closeButton)
 
         if(projects == nil || projects.count() == 0){
-            prott.showAlert("It seems you don't have any projects. Go to https://prottapp.com and create one, then click the 'Refresh projects list' button from the options.")
+            prott.showAlert("It seems you don't have any projects. Go to https://prottapp.com and create one, then click the 'Refresh projects list' button from the options.", context)
         }
         [optionWindow setContentView:accessoryView]
         [[NSApplication sharedApplication] runModalForWindow:optionWindow]
@@ -313,7 +317,7 @@ var prott = {
             if(response == 1){
                 prott.showOptionDialog(context)
             }else{
-                prott.showAlert("Oops! Something went wrong. Please check your login details and try again.")
+                prott.showAlert("Oops! Something went wrong. Please check your login details and try again.", context)
             }
         }
     },
@@ -413,7 +417,7 @@ var prott = {
             }
         }
         if (count == 0) {
-            prott.showAlert("You must select at least one artboard to sync.")
+            prott.showAlert("You must select at least one artboard to sync.", context)
         }else{
             prott.showMessage("All selected artboards synced to Prott.", context)
         }
@@ -425,12 +429,12 @@ var prott = {
         var loop = [artboards objectEnumerator]
         var cookie = [NSHTTPCookie requestHeaderFieldsWithCookies:prott.getSavedCookie()]
         while (artboard = [loop nextObject]) {
-            prott.uploadArtboard(doc, artboard, cookie.Cookie)
+            prott.uploadArtboard(doc, artboard, cookie.Cookie, context)
         }
         prott.showMessage("All artboards synced to Prott.", context)
     },
 
-    "uploadArtboard": function(document, artboard, cookie){
+    "uploadArtboard": function(document, artboard, cookie, context){
         var copy = [artboard duplicate]
         var frame = [copy frame]
         var rect = [MSSliceTrimming trimmedRectForSlice:copy],
@@ -449,11 +453,17 @@ var prott = {
 
         var outputData = [[outputPipe fileHandleForReading] readDataToEndOfFile]
         var outputString = [[[NSString alloc] initWithData:outputData encoding:NSUTF8StringEncoding]]
+        var outputArray = [NSJSONSerialization JSONObjectWithData:outputData options:NSJSONReadingAllowFragments error:nil]
         if(outputString != "successed"){
-            if(outputString == " "){
-                prott.showAlert("Oops! Something went wrong. Please check if the project you tried to sync exists or if you have editing permission for the project.")
+            if(outputString == " " || outputString == ""){
+                prott.showAlert("Oops! Something went wrong. Please check if the project you tried to sync exists or if you have editing permission for the project.", context)
             }else{
-                prott.showAlert(outputString[0])
+                prott.showAlert(outputArray["error"], context)
+                if (outputArray["error"] == "セッションがタイムアウトしました。もう一度ログインしてください。" ||
+                    outputArray["error"] == "You need to sign in or sign up before continuing.") {
+                    prott.logoutFromSketch()
+                    prott.initialSettings(context)
+                }
             }
         }
     }
