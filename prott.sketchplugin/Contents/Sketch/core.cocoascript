@@ -22,7 +22,7 @@ SOFTWARE.*/
 
 var prott = {
     "definations": {
-        "pluginVersion": "Version 1.0.8",
+        "pluginVersion": "Version 1.0.10",
         "apiBase": "https://prottapp.com/",
         "apiSignin": "users/sign_in.json",
         "apiSignout": "users/sign_out.json",
@@ -268,6 +268,10 @@ var prott = {
         [logoutButton setCOSJSTargetFunction:function(sender) {
             [[NSApplication sharedApplication] stopModal]
             [optionWindow orderOut:self]
+            [logoutButton setCOSJSTargetFunction:undefined]
+            [projectsListButton setCOSJSTargetFunction:undefined]
+            [refreshProjectsButton setCOSJSTargetFunction:undefined]
+            [closeButton setCOSJSTargetFunction:undefined]
             prott.logoutFromSketch()
             prott.initialSettings(context)
         }]
@@ -290,6 +294,10 @@ var prott = {
         [closeButton setCOSJSTargetFunction:function(sender) {
             [[NSApplication sharedApplication] stopModal]
             [optionWindow orderOut:self]
+            [logoutButton setCOSJSTargetFunction:undefined]
+            [projectsListButton setCOSJSTargetFunction:undefined]
+            [refreshProjectsButton setCOSJSTargetFunction:undefined]
+            [closeButton setCOSJSTargetFunction:undefined]
         }]
         accessoryView.addSubview(closeButton)
 
