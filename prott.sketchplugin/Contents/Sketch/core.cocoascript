@@ -22,7 +22,7 @@ SOFTWARE.*/
 
 var prott = {
     "definations": {
-        "pluginVersion": "Version 1.0.10",
+        "pluginVersion": "Version 1.1.0",
         "apiBase": "https://prottapp.com/",
         "apiSignin": "users/sign_in.json",
         "apiSignout": "users/sign_out.json",
@@ -109,26 +109,29 @@ var prott = {
         return [responseCode, emailInputField.stringValue(), passwordInputField.stringValue()]
     },
 
-    "showOptionDialog": function(context){
+    "showOptionDialog": function(context, isAllArtboardSync){
         var optionWindow = NSWindow.alloc().init()
-        [optionWindow setTitle:"Prott sketch plugin options"]
-        [optionWindow setFrame:NSMakeRect(0, 0, 570, 290) display:true]
+        if(isAllArtboardSync){
+            [optionWindow setTitle:"Sync All Artboards to Prott"]
+        }else{
+            [optionWindow setTitle:"Sync Selected Artboards to Prott"]
+        }
+        [optionWindow setFrame:NSMakeRect(0, 0, 523, 240) display:true]
 
-        var accessoryView = NSView.alloc().initWithFrame(NSMakeRect(0.0, 0.0, 550.0, 210.0))
-
+        var accessoryView = NSView.alloc().initWithFrame(NSMakeRect(0.0, 0.0, 503.0, 210.0))
         var plugin = context.plugin
         var imageFilePath=[plugin urlForResourceNamed:"logo@2x.png"]
         var imageData = [NSData dataWithContentsOfURL:imageFilePath]
         var image = NSImage.alloc().initWithData(imageData)
-        var imageView = [[NSImageView alloc] initWithFrame:NSMakeRect(20.0, 125.0, 123.0, 114.0)]
+        var imageView = [[NSImageView alloc] initWithFrame:NSMakeRect(20.0, 109.0, 80.0, 80.0)]
         [imageView setImage: image]
         accessoryView.addSubview(imageView)
 
-        var syncOptionsBox = NSBox.alloc().initWithFrame(NSMakeRect(160.0, 46.0, 400.0, 220.0))
+        var syncOptionsBox = NSBox.alloc().initWithFrame(NSMakeRect(117.0, 46.0, 400.0, 170.0))
         [syncOptionsBox setTitle:""]
         accessoryView.addSubview(syncOptionsBox)
 
-        var projectsLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 158.0, 110.0, 26.0))
+        var projectsLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 108.0, 110.0, 26.0))
         [projectsLabel setEditable:false]
         [projectsLabel setBordered:false]
         [projectsLabel setDrawsBackground:false]
@@ -136,7 +139,7 @@ var prott = {
         [projectsLabel setAlignment:1]
         syncOptionsBox.addSubview(projectsLabel)
 
-        var projectsListButton = NSPopUpButton.alloc().initWithFrame(NSMakeRect(134.0, 160.0, 240.0, 26.0))
+        var projectsListButton = NSPopUpButton.alloc().initWithFrame(NSMakeRect(134.0, 112.0, 240.0, 26.0))
         [projectsListButton setNeedsDisplay:true]
         var projects = prott.getSavedprojects()
         var projectsList = []
@@ -176,7 +179,7 @@ var prott = {
         }
         syncOptionsBox.addSubview(projectsListButton)
 
-        var refreshProjectsButton = NSButton.alloc().initWithFrame(NSMakeRect(130.0, 130.0, 180.0, 26.0))
+        var refreshProjectsButton = NSButton.alloc().initWithFrame(NSMakeRect(130.0, 81.0, 160.0, 26.0))
         [refreshProjectsButton setTitle:"Refresh projects list"]
         [refreshProjectsButton setBezelStyle:NSRoundedBezelStyle]
         [refreshProjectsButton setCOSJSTargetFunction:function(sender) {
@@ -218,7 +221,7 @@ var prott = {
         }]
         syncOptionsBox.addSubview(refreshProjectsButton)
 
-        var ratioLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 98.0, 110.0, 26.0))
+        var ratioLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 48.0, 110.0, 26.0))
         [ratioLabel setEditable:false]
         [ratioLabel setBordered:false]
         [ratioLabel setDrawsBackground:false]
@@ -226,7 +229,7 @@ var prott = {
         [ratioLabel setAlignment:1]
         syncOptionsBox.addSubview(ratioLabel)
 
-        var ratioList = NSPopUpButton.alloc().initWithFrame(NSMakeRect(134.0, 100.0, 80.0, 26.0))
+        var ratioList = NSPopUpButton.alloc().initWithFrame(NSMakeRect(134.0, 52.0, 80.0, 26.0))
         for(var i in prott.definations.ratioItems){
             var menuItem = [[NSMenuItem alloc] initWithTitle:prott.definations.ratioItems[i].name action:nil keyEquivalent:""]
             [[ratioList menu] addItem:menuItem]
@@ -238,11 +241,11 @@ var prott = {
         }
         syncOptionsBox.addSubview(ratioList)
 
-        var syncOptionsLine = NSBox.alloc().initWithFrame(NSMakeRect(12.0, 85.0, 360.0, 4.0))
+        var syncOptionsLine = NSBox.alloc().initWithFrame(NSMakeRect(12.0, 35.0, 360.0, 4.0))
         [syncOptionsLine setTitle:""]
         syncOptionsBox.addSubview(syncOptionsLine)
 
-        var accountLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 40.0, 110.0, 26.0))
+        var accountLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 0.0, 110.0, 26.0))
         [accountLabel setEditable:false]
         [accountLabel setBordered:false]
         [accountLabel setDrawsBackground:false]
@@ -250,7 +253,7 @@ var prott = {
         [accountLabel setAlignment:1]
         syncOptionsBox.addSubview(accountLabel)
 
-        var accountInfo = NSTextField.alloc().initWithFrame(NSMakeRect(136.0, 40.0, 240.0, 26.0))
+        var accountInfo = NSTextField.alloc().initWithFrame(NSMakeRect(136.0, 0.0, 240.0, 26.0))
         [accountInfo setEditable:false]
         [accountInfo setBordered:false]
         [accountInfo setDrawsBackground:false]
@@ -262,22 +265,7 @@ var prott = {
         [accountInfo setStringValue:prott.getSavedValueFromKey("accountInfo")]
         syncOptionsBox.addSubview(accountInfo)
 
-        var logoutButton = NSButton.alloc().initWithFrame(NSMakeRect(130.0, 10.0, 110.0, 26.0))
-        [logoutButton setTitle:"Log out"]
-        [logoutButton setBezelStyle:NSRoundedBezelStyle]
-        [logoutButton setCOSJSTargetFunction:function(sender) {
-            [[NSApplication sharedApplication] stopModal]
-            [optionWindow orderOut:self]
-            [logoutButton setCOSJSTargetFunction:undefined]
-            [projectsListButton setCOSJSTargetFunction:undefined]
-            [refreshProjectsButton setCOSJSTargetFunction:undefined]
-            [closeButton setCOSJSTargetFunction:undefined]
-            prott.logoutFromSketch()
-            prott.initialSettings(context)
-        }]
-        syncOptionsBox.addSubview(logoutButton)
-
-        var versionLabel = NSTextField.alloc().initWithFrame(NSMakeRect(40.0, 8.0, 200.0, 26.0))
+        var versionLabel = NSTextField.alloc().initWithFrame(NSMakeRect(0.0, 8.0, 200.0, 26.0))
         [versionLabel setEditable:false]
         [versionLabel setBordered:false]
         if (NSAppKitVersionNumber >= 1343) {
@@ -288,42 +276,63 @@ var prott = {
         [versionLabel setAlignment:1]
         accessoryView.addSubview(versionLabel)
 
-        var closeButton = NSButton.alloc().initWithFrame(NSMakeRect(450.0, 10.0, 110.0, 26.0))
-        [closeButton setTitle:"Close"]
-        [closeButton setBezelStyle:NSRoundedBezelStyle]
-        [closeButton setCOSJSTargetFunction:function(sender) {
+        var cancelButton = NSButton.alloc().initWithFrame(NSMakeRect(293.0, 10.0, 110.0, 26.0))
+        [cancelButton setTitle:"Cancel"]
+        [cancelButton setBezelStyle:NSRoundedBezelStyle]
+        [cancelButton setCOSJSTargetFunction:function(sender) {
+            if(projectsList[[projectsListButton indexOfSelectedItem]].id){
+                prott.saveValueForKey(projectsList[[projectsListButton indexOfSelectedItem]].id, "projectToSync")
+                prott.saveValueForKey([projectsListButton indexOfSelectedItem], "projectToSyncIndex")
+            }
+            prott.saveValueForKey(prott.definations.ratioItems[[ratioList indexOfSelectedItem]].value, "ratio")
+            prott.saveValueForKey([ratioList indexOfSelectedItem], "ratioIndex")
+
             [[NSApplication sharedApplication] stopModal]
             [optionWindow orderOut:self]
-            [logoutButton setCOSJSTargetFunction:undefined]
             [projectsListButton setCOSJSTargetFunction:undefined]
             [refreshProjectsButton setCOSJSTargetFunction:undefined]
-            [closeButton setCOSJSTargetFunction:undefined]
+            [cancelButton setCOSJSTargetFunction:undefined]
         }]
-        accessoryView.addSubview(closeButton)
+        accessoryView.addSubview(cancelButton)
+
+        var syncButton = NSButton.alloc().initWithFrame(NSMakeRect(407.0, 10.0, 110.0, 26.0))
+        [syncButton setKeyEquivalent:"\r"]
+        [syncButton setTitle:"Sync"]
+        [syncButton setBezelStyle:NSRoundedBezelStyle]
+        [syncButton setCOSJSTargetFunction:function(sender) {
+            if(projectsList[[projectsListButton indexOfSelectedItem]].id){
+                prott.saveValueForKey(projectsList[[projectsListButton indexOfSelectedItem]].id, "projectToSync")
+                prott.saveValueForKey([projectsListButton indexOfSelectedItem], "projectToSyncIndex")
+            }
+            prott.saveValueForKey(prott.definations.ratioItems[[ratioList indexOfSelectedItem]].value, "ratio")
+            prott.saveValueForKey([ratioList indexOfSelectedItem], "ratioIndex")
+
+            [[NSApplication sharedApplication] stopModal]
+            if(isAllArtboardSync) {
+                prott.syncAllArtboards(context)
+            }else{
+                prott.syncSelectedArtboards(context)
+            }
+            [optionWindow orderOut:self]
+            [projectsListButton setCOSJSTargetFunction:undefined]
+            [refreshProjectsButton setCOSJSTargetFunction:undefined]
+            [syncButton setCOSJSTargetFunction:undefined]
+        }]
+        accessoryView.addSubview(syncButton)
 
         if(projects == nil || projects.count() == 0){
             prott.showAlert("It seems you don't have any projects. Go to https://prottapp.com and create one, then click the 'Refresh projects list' button from the options.", context)
         }
         [optionWindow setContentView:accessoryView]
         [[NSApplication sharedApplication] runModalForWindow:optionWindow]
-
-        if(projectsList[[projectsListButton indexOfSelectedItem]].id){
-            prott.saveValueForKey(projectsList[[projectsListButton indexOfSelectedItem]].id, "projectToSync")
-            prott.saveValueForKey([projectsListButton indexOfSelectedItem], "projectToSyncIndex")
-        }else{
-            prott.saveValueForKey(projectsList[1].id, "projectToSync")
-            prott.saveValueForKey(1, "projectToSyncIndex")
-        }
-        prott.saveValueForKey(prott.definations.ratioItems[[ratioList indexOfSelectedItem]].value, "ratio")
-        prott.saveValueForKey([ratioList indexOfSelectedItem], "ratioIndex")
     },
 
-    "initialSettings": function(context){
+    "initialSettings": function(context, isAllArtboardSync){
         var response = prott.showLoginDialog(context)
         if(response[0] == 1000){
             var response = prott.loginWithEmailAndPassword(response[1], response[2])
             if(response == 1){
-                prott.showOptionDialog(context)
+                prott.showOptionDialog(context, isAllArtboardSync)
             }else{
                 prott.showAlert("Oops! Something went wrong. Please check your login details and try again.", context)
             }
@@ -470,7 +479,6 @@ var prott = {
                 if (outputArray["error"] == "セッションがタイムアウトしました。もう一度ログインしてください。" ||
                     outputArray["error"] == "You need to sign in or sign up before continuing.") {
                     prott.logoutFromSketch()
-                    prott.initialSettings(context)
                 }
             }
         }
