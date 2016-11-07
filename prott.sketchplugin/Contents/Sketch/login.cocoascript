@@ -24,6 +24,8 @@ SOFTWARE.*/
 
 var onRun = function (context){
     if(prott.getSavedCookie()){
-        prott.logoutFromSketch()
+        prott.showOptionDialog(context)
+    }else{
+        prott.initialSettings(context)
     }
 };

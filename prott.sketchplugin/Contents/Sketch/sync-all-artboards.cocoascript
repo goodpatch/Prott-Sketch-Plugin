@@ -24,8 +24,8 @@ SOFTWARE.*/
 
 var onRun = function (context){
     if(prott.getSavedCookie()){
-        prott.showOptionDialog(context, true)
+        prott.syncAllArtboards(context)
     }else{
-        prott.initialSettings(context, true)
+        prott.initialSettings(context)
     }
 };
