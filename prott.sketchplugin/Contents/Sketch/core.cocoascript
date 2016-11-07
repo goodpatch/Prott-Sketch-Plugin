@@ -97,7 +97,7 @@ var prott = {
         alert.addButtonWithTitle("Login")
         alert.addButtonWithTitle("Cancel")
         alert.setAccessoryView(accessoryView)
-        alert.setMessageText("Login to Prott")
+        alert.setMessageText("Log into Prott")
 
         var plugin = context.plugin
         var imageFilePath=[plugin urlForResourceNamed:"logo.png"]
