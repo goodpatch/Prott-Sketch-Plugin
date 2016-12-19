@@ -22,7 +22,7 @@ SOFTWARE.*/
 
 var prott = {
     "definations": {
-        "pluginVersion": "Version 1.1.2",
+        "pluginVersion": "Version 1.1.4",
         "apiBase": "https://prottapp.com/",
         "apiSignin": "users/sign_in.json",
         "apiSignout": "users/sign_out.json",
@@ -98,6 +98,9 @@ var prott = {
         alert.addButtonWithTitle("Cancel")
         alert.setAccessoryView(accessoryView)
         alert.setMessageText("Log into Prott")
+        
+        [[alert window] setInitialFirstResponder:emailInputField]
+        [emailInputField setNextKeyView:passwordInputField]
 
         var plugin = context.plugin
         var imageFilePath=[plugin urlForResourceNamed:"logo.png"]
@@ -475,7 +478,16 @@ var prott = {
         if(outputString != "successed"){
             if(outputString == " " || outputString == ""){
                 prott.showAlert("Oops! Something went wrong. Please check if the project you tried to sync exists or if you have editing permission for the project.", context)
-            }else{
+            }else if(outputString == "The screen you tried to sync cannot be updated because it is currently locked."){
+                prott.showAlert("The screen you tried to sync cannot be updated because it is currently locked.", context)
+            }else if(outputString == "The screen you tried to sync cannot be updated because it is currently archived."){
+                prott.showAlert("The screen you tried to sync cannot be updated because it is currently archived.", context)
+            }else if(outputString == "Request is invalid."){
+                prott.showAlert("Request is invalid.", context)
+            }else if(outputArray == nil){
+                prott.showAlert(outputString, context)
+            }
+            else{
                 prott.showAlert(outputArray["error"], context)
                 if (outputArray["error"] == "セッションがタイムアウトしました。もう一度ログインしてください。" ||
                     outputArray["error"] == "You need to sign in or sign up before continuing.") {
