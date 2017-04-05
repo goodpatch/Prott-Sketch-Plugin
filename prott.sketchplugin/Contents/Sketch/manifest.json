@@ -3,7 +3,7 @@
   "description": "Sync Sketch artboards to Prott like a boss.",
   "author": "Goodpatch, Inc.",
   "homepage": "https://prottapp.com/",
-  "version": "1.1.4",
+  "version": "2.0.0",
   "identifier": "com.goodpatch.prott.prott-sketch-plugin",
   "updateURL": "",
   "compatibleVersion": 3,

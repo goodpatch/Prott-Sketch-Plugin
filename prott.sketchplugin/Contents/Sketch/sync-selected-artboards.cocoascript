@@ -23,7 +23,7 @@ SOFTWARE.*/
 @import 'core.cocoascript'
 
 var onRun = function (context){
-    if(prott.getSavedCookie()){
+    if(!prott.isUpdated() && prott.getSavedCookie()) {
         prott.showOptionDialog(context, false)
     }else{
         prott.initialSettings(context, false)
