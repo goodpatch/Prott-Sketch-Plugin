@@ -22,7 +22,7 @@ SOFTWARE.*/
 
 var prott = {
     "definations": {
-        "pluginVersion": "Version 2.0.0",
+        "pluginVersion": "Version 2.0.2",
         "apiBase": "https://prottapp.com/",
         "apiSignin": "users/sign_in.json",
         "apiSignout": "users/sign_out.json",
@@ -203,6 +203,7 @@ var prott = {
         [platformButtonMatrix cells][1].title = "macOS App"
         if (prott.getSavedValueFromKey("UploadPlatform") == nil) {
             [platformButtonMatrix selectCellAtRow:0 column:0];
+            prott.saveValueForKey(0, "UploadPlatform")
         } else {
             [platformButtonMatrix selectCellAtRow:0 column:prott.getSavedValueFromKey("UploadPlatform")];
         }
