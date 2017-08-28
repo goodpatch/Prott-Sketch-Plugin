@@ -22,7 +22,7 @@ SOFTWARE.*/
 
 var prott = {
     "definations": {
-        "pluginVersion": "Version 2.0.2",
+        "pluginVersion": "Version 2.0.4",
         "apiBase": "https://prottapp.com/",
         "apiSignin": "users/sign_in.json",
         "apiSignout": "users/sign_out.json",
@@ -533,7 +533,7 @@ var prott = {
     "initialSettings": function(context, isAllArtboardSync){
         var response = prott.showLoginDialog(context)
         if(response[0] == 1000){
-            var response = prott.loginWithEmailAndPassword(response[1], response[2])
+            var response = prott.loginWithEmailAndPassword(context, response[1], response[2])
             if(response == 1){
                 prott.saveValueForKey(prott.definations.pluginVersion, "currentVersion")
                 prott.showOptionDialog(context, isAllArtboardSync)
@@ -544,7 +544,7 @@ var prott = {
         }
     },
 
-    "loginWithEmailAndPassword": function(email, password){
+    "loginWithEmailAndPassword": function(context, email, password){
         var url = [NSURL URLWithString:prott.definations.apiBase+prott.definations.apiSignin]
         var request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringCacheData timeoutInterval:60]
         [request setHTTPMethod:"POST"]
@@ -552,11 +552,10 @@ var prott = {
         [request setValue:"application/json" forHTTPHeaderField:"Content-Type"]
         [request setValue:"sketch" forHTTPHeaderField:"App-Type"]
 
-        var subParameter = NSDictionary.alloc().initWithObjectsAndKeys(email, @"email", password, @"password", nil)
-        var parameter = NSDictionary.alloc().initWithObjectsAndKeys(subParameter, @"user", nil)
+        var subParameter = {"email": email, "password": password}
+        var parameter = {"user": subParameter}
         var postData = [NSJSONSerialization dataWithJSONObject:parameter options:0 error:nil]
         [request setHTTPBody:postData]
-
         var response = MOPointer.alloc().init()
         var error = MOPointer.alloc().init()
         var data = [NSURLConnection sendSynchronousRequest:request returningResponse:response error:error]
@@ -655,8 +654,7 @@ var prott = {
                     var artboardName = artboard.name()
 
                     var screenID = artboard.objectID()
-                    var nameDictionary = NSDictionary.alloc().initWithObjectsAndKeys(fileName, "fileName", artboardName, "name", screenID, "id", nil)
-                    
+                    var nameDictionary = {"fileName": fileName, "name": artboardName, "id": screenID}
                     if (prott.isNewScreen(nameDictionary)) {
                         [array addObject:nameDictionary]
                     }
@@ -693,7 +691,7 @@ var prott = {
                 var fileName = artboard.objectID() + ".png"
                 var artboardName = artboard.name()
                 var screenID = artboard.objectID()
-                var nameDictionary = NSDictionary.alloc().initWithObjectsAndKeys(fileName, "fileName", artboardName, "name", screenID, "id", nil)
+                var nameDictionary = {"fileName": fileName, "name": artboardName, "id": screenID}
                 if (prott.isNewScreen(nameDictionary)) {
                     [array addObject:nameDictionary]
                 }
@@ -720,7 +718,7 @@ var prott = {
 
         var task = NSTask.alloc().init()
         task.setLaunchPath("/usr/bin/curl")
-        var args = NSArray.arrayWithObjects("-X", "POST", "-H", "Content-Type: multipart/form-data", "-H", "App-Type: sketch", "-H", "X-Accept: application/json", "-b", cookie, "-F", "project_id=" + prott.getSavedValueFromKey("projectToSync"), "-F", "screen[sketch_artboard_id]=" + artboard.objectID(), "-F", "screen[name]=" + artboard.name(), "-F", "Content-Disposition: form-data; name=file; filename=filename; Content-Type=image/png;", "-F", "screen[file]=@" + filePath, prott.definations.apiBase+prott.definations.apiScreens, nil)
+        var args = ["-X", "POST", "-H", "Content-Type: multipart/form-data", "-H", "App-Type: sketch", "-H", "X-Accept: application/json", "-b", cookie, "-F", "project_id=" + prott.getSavedValueFromKey("projectToSync"), "-F", "screen[sketch_artboard_id]=" + artboard.objectID(), "-F", "screen[name]=" + artboard.name(), "-F", "Content-Disposition: form-data; name=file; filename=filename; Content-Type=image/png;", "-F", "screen[file]=@" + filePath, prott.definations.apiBase+prott.definations.apiScreens]
         task.setArguments(args)
         var outputPipe = [NSPipe pipe]
         [task setStandardOutput:outputPipe]
