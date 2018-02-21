@@ -22,7 +22,7 @@ SOFTWARE.*/
 
 var prott = {
     "definations": {
-        "pluginVersion": "Version 2.0.4",
+        "pluginVersion": "Version 2.0.5",
         "apiBase": "https://prottapp.com/",
         "apiSignin": "users/sign_in.json",
         "apiSignout": "users/sign_out.json",
@@ -127,28 +127,20 @@ var prott = {
         }else{
             [optionWindow setTitle:"Sync Selected Artboards to Prott"]
         }
-        [optionWindow setFrame:NSMakeRect(0, 0, 523, 262) display:true]
+        [optionWindow setFrame:NSMakeRect(0, 0, 523, 236) display:true]
 
-        var accessoryView = NSView.alloc().initWithFrame(NSMakeRect(0.0, 0.0, 503.0, 282.0))
+        var accessoryView = NSView.alloc().initWithFrame(NSMakeRect(0.0, 0.0, 503.0, 256.0))
         var plugin = context.plugin
         var imageFilePath=[plugin urlForResourceNamed:"logo@2x.png"]
         var imageData = [NSData dataWithContentsOfURL:imageFilePath]
         var image = NSImage.alloc().initWithData(imageData)
-        var imageView = [[NSImageView alloc] initWithFrame:NSMakeRect(20.0, 148.0, 80.0, 80.0)]
+        var imageView = [[NSImageView alloc] initWithFrame:NSMakeRect(20.0, 122.0, 80.0, 80.0)]
         [imageView setImage: image]
         accessoryView.addSubview(imageView)
 
-        var syncOptionsBox = NSBox.alloc().initWithFrame(NSMakeRect(117.0, 46.0, 400.0, 192.0))
+        var syncOptionsBox = NSBox.alloc().initWithFrame(NSMakeRect(117.0, 46.0, 400.0, 166.0))
         [syncOptionsBox setTitle:""]
         accessoryView.addSubview(syncOptionsBox)
-
-        var projectsLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 136.0, 110.0, 26.0))
-        [projectsLabel setEditable:false]
-        [projectsLabel setBordered:false]
-        [projectsLabel setDrawsBackground:false]
-        [projectsLabel setStringValue:"Project to sync:"]
-        [projectsLabel setAlignment:1]
-        syncOptionsBox.addSubview(projectsLabel)
 
         var projectsListButton = NSPopUpButton.alloc().initWithFrame(NSMakeRect(134.0, 112.0, 240.0, 26.0))
         [projectsListButton setNeedsDisplay:true]
@@ -195,18 +187,13 @@ var prott = {
         }
         syncOptionsBox.addSubview(projectsListButton)
 
-        var platformButtonCell = NSButtonCell.alloc().init()
-        [platformButtonCell setButtonType:NSRadioButton]
-        var platformButtonMatrix = [[NSMatrix alloc] initWithFrame:NSMakeRect(134, 140, 240, 26) mode:NSRadioModeMatrix prototype:platformButtonCell numberOfRows:1 numberOfColumns:2]
-        platformButtonMatrix.cellSize = CGSizeMake(90, 26)
-        [platformButtonMatrix cells][0].title = "Web"
-        [platformButtonMatrix cells][1].title = "macOS App"
-        if (prott.getSavedValueFromKey("UploadPlatform") == nil) {
-            [platformButtonMatrix selectCellAtRow:0 column:0];
-            prott.saveValueForKey(0, "UploadPlatform")
-        } else {
-            [platformButtonMatrix selectCellAtRow:0 column:prott.getSavedValueFromKey("UploadPlatform")];
-        }
+        var selectProjectsLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 108.0, 110.0, 26.0))
+        [selectProjectsLabel setEditable:false]
+        [selectProjectsLabel setBordered:false]
+        [selectProjectsLabel setDrawsBackground:false]
+        [selectProjectsLabel setStringValue:"Select project:"]
+        [selectProjectsLabel setAlignment:1]
+        syncOptionsBox.addSubview(selectProjectsLabel)
 
         var ratioLabel = NSTextField.alloc().initWithFrame(NSMakeRect(12.0, 48.0, 110.0, 26.0))
         [ratioLabel setEditable:false]
@@ -311,81 +298,61 @@ var prott = {
         }]
         accessoryView.addSubview(syncButton)
 
-        [platformButtonMatrix setCOSJSTargetFunction:function(sender) {
-            if ([platformButtonMatrix selectedColumn] == 0) {
-                projectsList = prott.getProjectList(false)
-                menu = prott.getProjectListMenu(false)
-                [projectsListButton removeAllItems]
-                [projectsListButton setMenu:menu]
+        projectsList = prott.getProjectList(false)
+        menu = prott.getProjectListMenu(false)
+        [projectsListButton removeAllItems]
+        [projectsListButton setMenu:menu]
 
-                if(prott.getSavedValueFromKey("projectToSyncIndex")){
-                    if (prott.getSavedValueFromKey("projectToSyncIndex") == 0) {
-                        [projectsListButton selectItemAtIndex:1]
-                    } else {
-                        [projectsListButton selectItemAtIndex:prott.getSavedValueFromKey("projectToSyncIndex")]
-                    }
-                } else {
-                    [projectsListButton selectItemAtIndex:1]
-                }
-            } else if ([platformButtonMatrix selectedColumn] == 1) {
-                projectsList = prott.getAppProjectList()
-                menu = prott.getAppProjectListMenu()
-                [projectsListButton removeAllItems]
-                [projectsListButton setMenu:menu]
+        if(prott.getSavedValueFromKey("projectToSyncIndex")){
+            if (prott.getSavedValueFromKey("projectToSyncIndex") == 0) {
+                [projectsListButton selectItemAtIndex:1]
+            } else {
+                [projectsListButton selectItemAtIndex:prott.getSavedValueFromKey("projectToSyncIndex")]
             }
-            [syncButton setEnabled: (projectsList[0] != nil)]
-            prott.saveValueForKey([platformButtonMatrix selectedColumn], "UploadPlatform")
-        }]
-        syncOptionsBox.addSubview(platformButtonMatrix)
+        } else {
+            [projectsListButton selectItemAtIndex:1]
+        }
+        prott.saveValueForKey(0, "UploadPlatform")
 
         var refreshProjectsButton = NSButton.alloc().initWithFrame(NSMakeRect(130.0, 81.0, 160.0, 26.0))
         [refreshProjectsButton setTitle:"Refresh projects list"]
         [refreshProjectsButton setBezelStyle:NSRoundedBezelStyle]
         [refreshProjectsButton setCOSJSTargetFunction:function(sender) {
-            if ([platformButtonMatrix selectedColumn] == 0) {
-                prott.getProjectsFromServer()
+            prott.getProjectsFromServer()
 
-                projects = prott.getSavedprojects()
-                projectsList = []
-                var menu = NSMenu.alloc().init()
-                separateFlg = false
-                for(organzation in projects){
-                    if (projects[organzation].projects.count() == 0) {
-                        continue
-                    }
-                    if (separateFlg) {
-                        projectsList.push({name: "separate", id: nil})
-                        [menu addItem:[NSMenuItem separatorItem]]
-                    }else{
-                        separateFlg = true
-                    }
-
-                    var accountMenuItem = [[NSMenuItem alloc] initWithTitle:projects[organzation].name action:nil keyEquivalent:""]
-                    [accountMenuItem setEnabled:false]
-                    [menu addItem:accountMenuItem]
-                    projectsList.push({name: projects[organzation].name, id: nil})
-
-                    for(i = 0; i < projects[organzation].projects.count(); i++){
-                        var projectMenuItem = [[NSMenuItem alloc] initWithTitle:"    "+projects[organzation].projects[i].name action:nil keyEquivalent:""]
-                        [menu addItem:projectMenuItem]
-                        projectsList.push({name: projects[organzation].projects[i].name, id: projects[organzation].projects[i].id})
-                    }
+            projects = prott.getSavedprojects()
+            projectsList = []
+            var menu = NSMenu.alloc().init()
+            separateFlg = false
+            for(organzation in projects){
+                if (projects[organzation].projects.count() == 0) {
+                    continue
                 }
-                [menu setAutoenablesItems:false]
-                [projectsListButton setMenu:menu]
-                if(prott.getSavedValueFromKey("projectToSyncIndex")){
-                    [projectsListButton selectItemAtIndex:prott.getSavedValueFromKey("projectToSyncIndex")]
+                if (separateFlg) {
+                    projectsList.push({name: "separate", id: nil})
+                    [menu addItem:[NSMenuItem separatorItem]]
                 }else{
-                    [projectsListButton selectItemAtIndex:1]
+                    separateFlg = true
                 }
-            } else if ([platformButtonMatrix selectedColumn] == 1) {
 
-                projectsList = prott.getAppProjectList()
-                menu = prott.getAppProjectListMenu()
-                [projectsListButton removeAllItems]
-                [projectsListButton setMenu:menu]
+                var accountMenuItem = [[NSMenuItem alloc] initWithTitle:projects[organzation].name action:nil keyEquivalent:""]
+                [accountMenuItem setEnabled:false]
+                [menu addItem:accountMenuItem]
+                projectsList.push({name: projects[organzation].name, id: nil})
+
+                for(i = 0; i < projects[organzation].projects.count(); i++){
+                    var projectMenuItem = [[NSMenuItem alloc] initWithTitle:"    "+projects[organzation].projects[i].name action:nil keyEquivalent:""]
+                    [menu addItem:projectMenuItem]
+                    projectsList.push({name: projects[organzation].projects[i].name, id: projects[organzation].projects[i].id})
+                }
             }
-            [syncButton setEnabled: (projectsList[0] != nil)]
+            [menu setAutoenablesItems:false]
+            [projectsListButton setMenu:menu]
+            if(prott.getSavedValueFromKey("projectToSyncIndex")){
+                [projectsListButton selectItemAtIndex:prott.getSavedValueFromKey("projectToSyncIndex")]
+            }else{
+                [projectsListButton selectItemAtIndex:1]
+            }
         }]
         syncOptionsBox.addSubview(refreshProjectsButton)
 
