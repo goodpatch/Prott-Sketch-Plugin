@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>Sketch Plugin</title>
+    <link>https://raw.githubusercontent.com/goodpatch/Prott-Sketch-Plugin/tree/master/prott.sketchplugin/Contents/Sketch/appcast.xml</link>
+    <description>Sync Sketch artboards to Prott like a boss.</description>
+    <language>en</language>
+    <item>
+      <title>Version 2.0.7</title>
+      <description>
+        <![CDATA[
+            <ul>
+              <li>Support plugin update system</li>
+            </ul>
+          ]]>
+      </description>
+      <enclosure url="https://github.com/goodpatch/Prott-Sketch-Plugin/releases/download/2.0.7/prott.sketchplugin.zip" sparkle:version="2.0.7"/>
+    </item>
+    <item>
+      <title>Version 2.0.6</title>
+      <description>
+        <![CDATA[
+            <ul>
+              <li>We fixed some bugs.</li>
+            </ul>
+          ]]>
+      </description>
+      <enclosure url="https://github.com/goodpatch/Prott-Sketch-Plugin/releases/download/2.0.6/prott.sketchplugin.zip" sparkle:version="2.0.6"/>
+    </item>
+  </channel>
+</rss>
