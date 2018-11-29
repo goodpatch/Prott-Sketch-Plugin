@@ -2,4 +2,4 @@
 
 Sync Sketch artboards to Prott like a boss.
 
-[Details here.](https://blog.prottapp.com/post/en/sketch-integration)
+[Details here.](https://docs.prottapp.com/article/156-how-to-use-sketch-plugin)
