@@ -22,7 +22,7 @@ SOFTWARE.*/
 
 var prott = {
     "definations": {
-        "pluginVersion": "Version 2.0.7",
+        "pluginVersion": "Version 2.0.8",
         "apiBase": "https://prottapp.com/",
         "apiSignin": "users/sign_in.json",
         "apiSignout": "users/sign_out.json",
