@@ -6,6 +6,17 @@
     <description>Sync Sketch artboards to Prott like a boss.</description>
     <language>en</language>
     <item>
+      <title>Version 2.0.9</title>
+      <description>
+        <![CDATA[
+            <ul>
+              <li>Fix appcast.xml path</li>
+            </ul>
+          ]]>
+      </description>
+      <enclosure url="https://github.com/goodpatch/Prott-Sketch-Plugin/releases/download/2.0.9/prott.sketchplugin.zip" sparkle:version="2.0.9"/>
+    </item>
+    <item>
       <title>Version 2.0.8</title>
       <description>
         <![CDATA[
